@@ -1,69 +1,38 @@
-var map = L.map('map').setView([29.8884, -97.9384], 14);
-mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
-L.tileLayer(
-    'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; ' + mapLink + ' Contributors',
-    maxZoom: 18,
-    }).addTo(map);
+var map = L.map('map').setView([29.8884, -97.9384], 14); //sets the leaflet map and made it center on san marcos
 
-// ===== Member 1: Buffer =====
-function addMarkerWithBuffer(lat, lng, radius, units) {
-  L.marker([lat, lng]).addTo(map)
-      .bindPopup("Texas State University<br>Buffer: " + radius + " " + units);
+var mapLink =
+    '<a href="https://www.openstreetmap.org">OpenStreetMap</a>';
 
-  var point = turf.point([lng, lat]);
-  var buffered = turf.buffer(point, radius, { units: units });
+L.tileLayer
+(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+        attribution: '&copy; ' + mapLink + ' Contributors',
+        maxZoom: 18
+    }
+)
+.addTo(map);
 
-  L.geoJSON(buffered, {
-      style: { color: 'red', fillColor: '#f03', fillOpacity: 0.3 }
-  }).addTo(map);
-}
-
-// ===== Member 2: Along =====
-function pointAlongLine(coordinates, distance, units) {
-  var line = turf.lineString(coordinates);
-  var leafletCoords = coordinates.map(function (c) { return [c[1], c[0]]; });
-  L.polyline(leafletCoords, { color: 'blue' }).addTo(map);
-
-  var along = turf.along(line, distance, { units: units });
-  var coords = along.geometry.coordinates;
-
-  L.marker([coords[1], coords[0]]).addTo(map)
-      .bindPopup("Point " + distance + " " + units + " along the line");
-
-  return along;
-}
-
-// ===== Member 3: Area =====
-function createPolygonWithArea(coordinates) {
-  var polygon = turf.polygon([coordinates]);
-  var area = turf.area(polygon);
-  var areaKm2 = (area / 1000000).toFixed(4);
-
-  var leafletCoords = coordinates.map(function (c) { return [c[1], c[0]]; });
-  L.polygon(leafletCoords, {
-      color: 'green', fillColor: '#3f3', fillOpacity: 0.3
-  }).addTo(map).bindPopup("Area: " + areaKm2 + " km²");
-
-  document.getElementById('area-display').innerHTML =
-      "Polygon Area: <b>" + areaKm2 + " km²</b>";
-
-  return area;
-}
-
-// ===== Call all three =====
-addMarkerWithBuffer(29.8884, -97.9384, 0.3, 'kilometers');
-
-pointAlongLine([
-  [-97.955, 29.875],
-  [-97.940, 29.890],
-  [-97.920, 29.900]
-], 1, 'miles');
-
-createPolygonWithArea([
-  [-97.955, 29.895],
-  [-97.935, 29.895],
-  [-97.935, 29.905],
-  [-97.955, 29.905],
-  [-97.955, 29.895]
+var point = turf.point([-97.941764, 29.888539]);  // create a geojson point using Turf
+var polygon = turf.polygon([        // create a geojson polygon using turf
+  [
+    [-98.00, 29.82],
+    [-97.85, 29.82],
+    [-97.85, 29.94],
+    [-98.00, 29.94],
+    [-98.00, 29.82],
+  ],
 ]);
+
+var area = turf.area(polygon);
+console.log(area);
+//------------------------------------------------------------------------------------------------------------------------
+
+// so what was missing is the ".addTo(Map)" syntax which help to add your layer to the basemap so it could appear on the screen.
+// while L.geoJSON(point) creates a leaflet layer from the turf point
+
+
+L.geoJSON(point).addTo(map); // display the turf point on leaflet 
+
+var polygonLayer = L.geoJSON(polygon).addTo(map);  //Display the turf polygon and stoe its leaflet layer
+map.fitBounds(polygonLayer.getBounds());  //adjust the maps
